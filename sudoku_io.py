@@ -47,13 +47,16 @@ class Sudoku:
         return list_representation
 
 
-def read_line_sudoku_file(path):
+def read_line_sudoku_file(path, sudoku_class=Sudoku):
     sudokus = []
+    i = 0
 
     with codecs.open(path, "rb", "utf-8") as sudoku_file:
         for line in sudoku_file.readlines():
             line = line.strip()
-            sudokus.append(Sudoku(line))
+            sudokus.append(sudoku_class(line))
+            i += 1
+            print(i)
 
     return sudokus
 
@@ -62,6 +65,5 @@ if __name__ == "__main__":
     sudoku_path = "./data/10k_25.txt"
     sudokus = read_line_sudoku_file(sudoku_path)
 
-    for sudoku in sudokus:
-        print(sudoku)
-        print(sudoku[1][2])
+    #for sudoku in sudokus:
+    #    print(sudoku)
