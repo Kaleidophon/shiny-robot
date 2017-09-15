@@ -13,6 +13,10 @@ class Sudoku:
     """
     def __init__(self, raw_data):
         self.raw_data = raw_data
+        self.list_representation = self._to_lists(self.raw_data)
+
+    def __getitem__(self, index):
+        return self.list_representation[index]
 
     def __repr__(self):
         divider = "{}+{}+{}\n".format(6*"-", 6*"-", 6*"-")
@@ -28,6 +32,19 @@ class Sudoku:
             if (i+1) % 27 == 0 and i+1 != 81:
                 representation += divider
         return representation
+
+    @staticmethod
+    def _to_lists(raw_data):
+        list_representation, current_row = [], []
+
+        for i, n in zip(range(len(raw_data)), raw_data):
+            current_row.append(int(n))
+
+            if (i+1) % 9 == 0:
+                list_representation.append(current_row)
+                current_row = []
+
+        return list_representation
 
 
 def read_line_sudoku_file(path):
@@ -47,3 +64,4 @@ if __name__ == "__main__":
 
     for sudoku in sudokus:
         print(sudoku)
+        print(sudoku[1][2])
