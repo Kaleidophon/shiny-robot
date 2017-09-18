@@ -5,6 +5,19 @@ Functions concerning the input and output of Sudokus.
 
 # STD
 import codecs
+import hashlib
+
+
+class SudokuCollection:
+    """
+    Collection that contains multiple sudokus.
+    """
+    def __init__(self, sudokus):
+        self.sudokus = sudokus
+
+    def __iter__(self):
+        for sudoku_uid, sudoku in self.sudokus.items():
+            yield sudoku_uid, sudoku
 
 
 class Sudoku:
@@ -12,6 +25,7 @@ class Sudoku:
     Class to represent a sudoku.
     """
     def __init__(self, raw_data):
+        self.uid = id(raw_data)
         self.raw_data = raw_data
         self.list_representation = self._to_lists(self.raw_data)
 
@@ -19,6 +33,9 @@ class Sudoku:
         return self.list_representation[index]
 
     def __repr__(self):
+        return "<Sudoku with id={}>".format(self.uid)
+
+    def __str__(self):
         divider = "{}+{}+{}\n".format(6*"-", 6*"-", 6*"-")
 
         representation = ""
@@ -48,15 +65,18 @@ class Sudoku:
 
 
 def read_line_sudoku_file(path, sudoku_class=Sudoku):
-    sudokus = []
+    sudokus = {}
     i = 0
 
     with codecs.open(path, "rb", "utf-8") as sudoku_file:
         for line in sudoku_file.readlines():
             line = line.strip()
-            sudokus.append(sudoku_class(line))
+            sudoku = sudoku_class(line)
+            sudokus[sudoku.uid] = sudoku
             i += 1
-            print(i)
+            print("\rProcessing {} sudokus...".format(i), end="", flush=True)
+
+    print("")
 
     return sudokus
 
@@ -64,6 +84,7 @@ def read_line_sudoku_file(path, sudoku_class=Sudoku):
 if __name__ == "__main__":
     sudoku_path = "./data/10k_25.txt"
     sudokus = read_line_sudoku_file(sudoku_path)
+
 
     #for sudoku in sudokus:
     #    print(sudoku)
