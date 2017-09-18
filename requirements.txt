@@ -1,0 +1,3 @@
+pycosat
+numpy
+matplotlib
