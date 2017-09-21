@@ -44,6 +44,17 @@ class SpatialAnalysisSudoku(Sudoku):
         shape = self.distance_matrix.shape
         return sum([sum(row) for row in self.distance_matrix]) / (shape[0] * shape[1])
 
+    @property
+    def distance_variance(self):
+        average_distance = self.average_distance
+        shape = self.distance_matrix.shape
+        return sum([
+            sum([
+                (dist - average_distance)**2 for dist in row
+            ])
+            for row in self.distance_matrix
+        ]) / (shape[0] * shape[1])
+
     @staticmethod
     def numbers_distance(coordinates1, coordinates2):
         return numpy.linalg.norm(
@@ -105,7 +116,7 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
             for sudoku_uid, _ in self.sorted_average_distances[:n]
         }
 
-    def plot_distribution(self):
+    def plot_average_distance_distribution(self):
         assert self.average_distances is not None and self.distances_frequencies is not None, \
             "Please run calculate_distance_distribution() first"
         number_of_sudokus = len(self.sudokus)
@@ -127,8 +138,29 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
         print("Showing plot...")
         plt.show()
 
+    def plot_average_and_variance(self):
+        averages_and_variances = {
+            sudoku_uid: (sudoku.average_distance, sudoku.distance_variance)
+            for sudoku_uid, sudoku in self
+        }
+        number_of_sudokus = len(self.sudokus)
+
+        fig, ax = plt.subplots()
+        x, y = zip(*list(averages_and_variances.values()))
+
+        ax.scatter(x, y)
+        ax.set_title(
+            "Distribution of {} Sudokus given their distance mean and average".format(number_of_sudokus),
+            fontsize=10
+        )
+        plt.xlabel("Average distance")
+        plt.ylabel("Distance variance")
+
+        plt.show()
+
+
 if __name__ == "__main__":
-    sudoku_path = "../data/100_25.txt"
+    sudoku_path = "../data/49k_17.txt"
     sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=SpatialAnalysisSudoku)
     sasc = SpatialAnalysisSudokuCollection(sudokus, precision=2)
     sasc.calculate_distance_distribution()
@@ -144,6 +176,7 @@ if __name__ == "__main__":
     for _, sudoku in lowest.items():
         print(str(sudoku))
 
-    sasc.plot_distribution()
+    #sasc.plot_average_distance_distribution()
+    #sasc.plot_average_and_variance()
 
 

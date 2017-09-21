@@ -82,7 +82,7 @@ def read_line_sudoku_file(path, sudoku_class=Sudoku):
 
 
 if __name__ == "__main__":
-    sudoku_path = "./data/10k_25.txt"
+    sudoku_path = "./data/100_25.txt"
     sudokus = read_line_sudoku_file(sudoku_path)
 
 
