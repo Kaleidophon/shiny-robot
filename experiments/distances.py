@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""
+Functions to analyze the distances between given number inside a sudoku.
+"""
 
 # STD
 from collections import defaultdict
@@ -8,7 +12,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 # PROJECT
-from sudoku import Sudoku, SudokuCollection, read_line_sudoku_file
+from general import Sudoku, SudokuCollection, read_line_sudoku_file
 
 
 class SpatialAnalysisSudoku(Sudoku):
@@ -19,25 +23,31 @@ class SpatialAnalysisSudoku(Sudoku):
 
     def __init__(self, raw_data):
         super().__init__(raw_data)
-        self.given_coordinates, self.distance_matrix = self._build_distance_matrix(self.list_representation)
+        self._build_distance_matrix()
         # self.print_matrix(self.distance_matrix)
 
-    def _build_distance_matrix(self, list_representation):
-        given_coordinates = []
-
-        # Get coordinates of given numbers
-        for x in range(len(list_representation)):
-            for y in range(len(list_representation[x])):
-                if list_representation[x][y] != 0:
-                    given_coordinates.append((x, y))
+    def _build_distance_matrix(self):
+        given_coordinates = self.given_coordinates
+        n_givens = len(given_coordinates)
 
         # Calculate distance matrix
-        distance_matrix = numpy.zeros(shape=(len(given_coordinates), len(given_coordinates)))
-        for i in range(len(given_coordinates)):
-            for j in range(len(given_coordinates)):
-                distance_matrix[i][j] += self.numbers_distance(given_coordinates[i], given_coordinates[j])
+        self.distance_matrix = numpy.zeros(shape=(n_givens, n_givens))
+        for i in range(n_givens):
+            for j in range(n_givens):
+                self.distance_matrix[i][j] += self.numbers_distance(given_coordinates[i], given_coordinates[j])
 
-        return given_coordinates, distance_matrix
+    @property
+    def given_coordinates(self):
+        given_coordinates = []
+        dimension = len(self.list_representation)
+
+        # Get coordinates of given numbers
+        for x in range(dimension):
+            for y in range(dimension):
+                if self.list_representation[x][y] != 0:
+                    given_coordinates.append((x, y))
+
+        return given_coordinates
 
     @property
     def average_distance(self):
@@ -67,6 +77,10 @@ class SpatialAnalysisSudoku(Sudoku):
     def print_matrix(matrix):
         numpy.set_printoptions(precision=2, suppress=True, linewidth=220)
         print(matrix)
+
+    def update(self):
+        super().update()
+        self._build_distance_matrix()
 
 
 class SpatialAnalysisSudokuCollection(SudokuCollection):
