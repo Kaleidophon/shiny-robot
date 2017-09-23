@@ -63,6 +63,19 @@ class Sudoku:
 
         return list_representation
 
+    @property
+    def raw(self):
+        return self.raw_data
+
+    def _to_raw(self):
+        return "".join(["".join([str(cell) for cell in row]) for row in self.list_representation])
+
+    def update(self):
+        self.raw_data = self._to_raw()
+
+    def __copy__(self):
+        return self.__class__(self.raw_data)
+
 
 def read_line_sudoku_file(path, sudoku_class=Sudoku):
     sudokus = {}
