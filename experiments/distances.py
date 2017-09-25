@@ -15,6 +15,13 @@ import matplotlib.pyplot as plt
 from general import Sudoku, SudokuCollection, read_line_sudoku_file
 
 
+# https://en.wikipedia.org/wiki/Spatial_descriptive_statistics
+# TODO:
+# - Compute measure of spatial central tendency based on centroid
+# - Using trace / determinant / biggest eigenvalue of covariance matrix - are those correlated?
+# - Ripley's K and L functions
+
+
 class SpatialAnalysisSudoku(Sudoku):
     """
     Sudoku class with also measures the degree of spatial distribution of given numbers within the sudoku.
