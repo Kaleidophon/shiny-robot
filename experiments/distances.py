@@ -6,20 +6,18 @@ Functions to analyze the distances between given number inside a sudoku.
 # STD
 from collections import defaultdict
 import math
+import functools
 
 # EXT
 import numpy
 import matplotlib.pyplot as plt
+from scipy.linalg import eigh
 
 # PROJECT
 from general import Sudoku, SudokuCollection, read_line_sudoku_file
 
 
 # https://en.wikipedia.org/wiki/Spatial_descriptive_statistics
-# TODO:
-# - Compute measure of spatial central tendency based on centroid
-# - Using trace / determinant / biggest eigenvalue of covariance matrix - are those correlated?
-# - Ripley's K and L functions
 
 
 class SpatialAnalysisSudoku(Sudoku):
@@ -88,6 +86,70 @@ class SpatialAnalysisSudoku(Sudoku):
     def update(self):
         super().update()
         self._build_distance_matrix()
+
+
+class DeterminantSudoku(SpatialAnalysisSudoku):
+    """
+    Use the determinant of the distance matrix as a measure of the dispersion of the given numbers.
+    """
+    @property
+    def average_distance(self):
+        return numpy.linalg.det(self.distance_matrix)
+
+    @property
+    def distance_variance(self):
+        raise NotImplementedError
+
+
+class EigenvalueSudoku(SpatialAnalysisSudoku):
+    """
+    Use the biggest eigenvalue of the distance matrix as a measure of the dispersion of the given numbers.
+    """
+    @property
+    def average_distance(self):
+        return eigh(self.distance_matrix, eigvals_only=True)[0]
+
+    @property
+    def distance_variance(self):
+        raise NotImplementedError
+
+
+class CentroidSudoku(SpatialAnalysisSudoku):
+    """
+    Create a centroid based on the distribution of the given numbers and measure the average distance to it.
+    """
+    @property
+    def centroid(self):
+        given_coordinates = self.given_coordinates
+        x_coordinates, y_coordinates = zip(*given_coordinates)
+        return (
+            sum(x_coordinates)/len(x_coordinates),  # x coordinate for centroid
+            sum(y_coordinates)/len(y_coordinates)  # y coordinate for centroid
+        )
+
+    @property
+    def average_distance(self):
+        distance_matrix = self.distance_matrix
+        return sum(distance_matrix) / len(distance_matrix)
+
+    @property
+    def distance_variance(self):
+        distance_matrix = self.distance_matrix
+        average_distance = self.average_distance
+        return functools.reduce(
+            lambda sum_, dist: sum_ + (dist - average_distance)**2, distance_matrix
+        ) / len(distance_matrix)
+
+    def _build_distance_matrix(self):
+        given_coordinates = self.given_coordinates
+        centroid = self.centroid
+        n_givens = len(given_coordinates)
+
+        # Calculate distance matrix
+        self.distance_matrix = numpy.zeros(shape=(n_givens, 1))
+
+        for coordinates, i in zip(given_coordinates, range(n_givens)):
+            self.distance_matrix[i] = self.numbers_distance(centroid, coordinates)
 
 
 class SpatialAnalysisSudokuCollection(SudokuCollection):
@@ -182,20 +244,22 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
 
 if __name__ == "__main__":
     sudoku_path = "../data/49k_17.txt"
-    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=SpatialAnalysisSudoku)
+    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=EigenvalueSudoku)
     sasc = SpatialAnalysisSudokuCollection(sudokus, precision=2)
     sasc.calculate_distance_distribution()
+    sasc.plot_average_distance_distribution()
+    #sasc.plot_average_and_variance()
 
-    highest = sasc.get_n_highest(3)
-    lowest = sasc.get_n_lowest(3)
+    #highest = sasc.get_n_highest(3)
+    #lowest = sasc.get_n_lowest(3)
 
-    print("Sudokus with highest average distances...")
-    for _, sudoku in highest.items():
-        print(str(sudoku))
+    #print("Sudokus with highest average distances...")
+    #for _, sudoku in highest.items():
+    #    print(str(sudoku))
 
-    print("Sudokus with lowest average distances...")
-    for _, sudoku in lowest.items():
-        print(str(sudoku))
+    #print("Sudokus with lowest average distances...")
+    #for _, sudoku in lowest.items():
+    #    print(str(sudoku))
 
     #sasc.plot_average_distance_distribution()
     #sasc.plot_average_and_variance()
