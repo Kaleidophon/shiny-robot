@@ -1,0 +1,10 @@
+Correlation between dispersion metrics for the ../data/49k_17.txt data set
+
+         Sudoku class A |         Sudoku class B | Pearson's rho
+------------------------+------------------------+------------------------
+  SpatialAnalysisSudoku |      DeterminantSudoku | 0.10
+  SpatialAnalysisSudoku |       EigenvalueSudoku | 0.23
+  SpatialAnalysisSudoku |         CentroidSudoku | 0.97
+      DeterminantSudoku |       EigenvalueSudoku | 0.02
+      DeterminantSudoku |         CentroidSudoku | 0.07
+       EigenvalueSudoku |         CentroidSudoku | 0.08
