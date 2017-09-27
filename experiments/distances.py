@@ -244,24 +244,20 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
 
 if __name__ == "__main__":
     sudoku_path = "../data/49k_17.txt"
-    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=EigenvalueSudoku)
+    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=SpatialAnalysisSudoku)
     sasc = SpatialAnalysisSudokuCollection(sudokus, precision=2)
     sasc.calculate_distance_distribution()
+
+    highest = sasc.get_n_highest(3)
+    lowest = sasc.get_n_lowest(3)
+
+    print("Sudokus with highest average distances...")
+    for _, sudoku in highest.items():
+        print(str(sudoku))
+
+    print("Sudokus with lowest average distances...")
+    for _, sudoku in lowest.items():
+        print(str(sudoku))
+
     sasc.plot_average_distance_distribution()
-    #sasc.plot_average_and_variance()
-
-    #highest = sasc.get_n_highest(3)
-    #lowest = sasc.get_n_lowest(3)
-
-    #print("Sudokus with highest average distances...")
-    #for _, sudoku in highest.items():
-    #    print(str(sudoku))
-
-    #print("Sudokus with lowest average distances...")
-    #for _, sudoku in lowest.items():
-    #    print(str(sudoku))
-
-    #sasc.plot_average_distance_distribution()
-    #sasc.plot_average_and_variance()
-
-
+    sasc.plot_average_and_variance()

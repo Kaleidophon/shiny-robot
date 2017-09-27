@@ -87,7 +87,7 @@ def read_line_sudoku_file(path, sudoku_class=Sudoku):
             sudoku = sudoku_class(line)
             sudokus[sudoku.uid] = sudoku
             i += 1
-            print("\rProcessing {} sudokus...".format(i), end="", flush=True)
+            print("\rProcessing {} {}...".format(i, sudoku_class.__name__ + "s"), end="", flush=True)
 
     print("")
 

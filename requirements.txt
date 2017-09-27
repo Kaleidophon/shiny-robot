@@ -2,4 +2,4 @@ pycosat
 numpy
 matplotlib
 scipy
-
+sklearn
