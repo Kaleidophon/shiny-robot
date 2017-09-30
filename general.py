@@ -5,7 +5,6 @@ Functions concerning the input and output of Sudokus.
 
 # STD
 import codecs
-import hashlib
 
 
 class SudokuCollection:

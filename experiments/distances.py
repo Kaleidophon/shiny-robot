@@ -55,13 +55,13 @@ class SpatialAnalysisSudoku(Sudoku):
         return given_coordinates
 
     @property
-    def average_distance(self):
+    def metric(self):
         shape = self.distance_matrix.shape
         return sum([sum(row) for row in self.distance_matrix]) / (shape[0] * shape[1])
 
     @property
     def distance_variance(self):
-        average_distance = self.average_distance
+        average_distance = self.metric
         shape = self.distance_matrix.shape
         return sum([
             sum([
@@ -93,7 +93,7 @@ class DeterminantSudoku(SpatialAnalysisSudoku):
     Use the determinant of the distance matrix as a measure of the dispersion of the given numbers.
     """
     @property
-    def average_distance(self):
+    def metric(self):
         return numpy.linalg.det(self.distance_matrix)
 
     @property
@@ -106,7 +106,7 @@ class EigenvalueSudoku(SpatialAnalysisSudoku):
     Use the biggest eigenvalue of the distance matrix as a measure of the dispersion of the given numbers.
     """
     @property
-    def average_distance(self):
+    def metric(self):
         return eigh(self.distance_matrix, eigvals_only=True)[0]
 
     @property
@@ -128,14 +128,14 @@ class CentroidSudoku(SpatialAnalysisSudoku):
         )
 
     @property
-    def average_distance(self):
+    def metric(self):
         distance_matrix = self.distance_matrix
         return sum(distance_matrix) / len(distance_matrix)
 
     @property
     def distance_variance(self):
         distance_matrix = self.distance_matrix
-        average_distance = self.average_distance
+        average_distance = self.metric
         return functools.reduce(
             lambda sum_, dist: sum_ + (dist - average_distance)**2, distance_matrix
         ) / len(distance_matrix)
@@ -166,10 +166,14 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
         super().__init__(sudokus)
         self.precision = precision
 
-    def calculate_distance_distribution(self):
+    @property
+    def sudoku_cls(self):
+        return type(list(self.sudokus.values())[0])
+
+    def calculate_metric_distribution(self):
         self.average_distances = {
-            sudoku_uid: sudoku.average_distance for sudoku_uid, sudoku in self
-        }
+            sudoku_uid: sudoku.metric for sudoku_uid, sudoku in self
+            }
         self.distances_frequencies = defaultdict(int)
 
         for _, dist in self.average_distances.items():
@@ -199,7 +203,7 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
             for sudoku_uid, _ in self.sorted_average_distances[:n]
         }
 
-    def plot_average_distance_distribution(self):
+    def plot_average_metric_distribution(self):
         assert self.average_distances is not None and self.distances_frequencies is not None, \
             "Please run calculate_distance_distribution() first"
         number_of_sudokus = len(self.sudokus)
@@ -223,7 +227,7 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
 
     def plot_average_and_variance(self):
         averages_and_variances = {
-            sudoku_uid: (sudoku.average_distance, sudoku.distance_variance)
+            sudoku_uid: (sudoku.metric, sudoku.distance_variance)
             for sudoku_uid, sudoku in self
         }
         number_of_sudokus = len(self.sudokus)
@@ -246,7 +250,7 @@ if __name__ == "__main__":
     sudoku_path = "../data/49k_17.txt"
     sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=SpatialAnalysisSudoku)
     sasc = SpatialAnalysisSudokuCollection(sudokus, precision=2)
-    sasc.calculate_distance_distribution()
+    sasc.calculate_metric_distribution()
 
     highest = sasc.get_n_highest(3)
     lowest = sasc.get_n_lowest(3)
@@ -259,5 +263,5 @@ if __name__ == "__main__":
     for _, sudoku in lowest.items():
         print(str(sudoku))
 
-    sasc.plot_average_distance_distribution()
+    sasc.plot_average_metric_distribution()
     sasc.plot_average_and_variance()

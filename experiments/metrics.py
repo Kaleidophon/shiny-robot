@@ -9,6 +9,7 @@ import numpy
 from scipy.stats import pearsonr
 
 # PROJECT
+from general import Sudoku
 from experiments.distances import (
     SpatialAnalysisSudokuCollection,
     SpatialAnalysisSudoku,
@@ -17,6 +18,7 @@ from experiments.distances import (
     CentroidSudoku,
     read_line_sudoku_file
 )
+from experiments.entropy import EntropySudokuCollection
 
 
 class MetricComparison:
@@ -26,24 +28,21 @@ class MetricComparison:
     frequency_distributions = None
     correlations = None
 
-    def __init__(self, sudoku_path, *sudoku_classes, precision=3):
-        assert len(sudoku_classes) > 1, "You need to compare at least two different metrics."
+    def __init__(self, sudoku_path, sudoku_collections, precision=3):
+        assert len(sudoku_collections) > 1, "You need to compare at least two different metrics."
         self.sudoku_path = sudoku_path
         self.precision = precision
 
         self.sudoku_collections = {
-            sudoku_class: SpatialAnalysisSudokuCollection(
-                sudokus=read_line_sudoku_file(sudoku_path, sudoku_class=sudoku_class),
-                precision=precision
-            )
-            for sudoku_class in sudoku_classes
+            sudoku_collection.sudoku_cls: sudoku_collection
+            for sudoku_collection in sudoku_collections
         }
 
     def gather_distributions(self):
         self.frequency_distributions = {}
 
         for sudoku_class, sudoku_collection in self.sudoku_collections.items():
-            sudoku_collection.calculate_distance_distribution()
+            sudoku_collection.calculate_metric_distribution()
             distances_frequencies = sudoku_collection.distances_frequencies
 
             # Normalize and extend
@@ -92,12 +91,23 @@ class MetricComparison:
                     print("{:>23} |{:>23} | {:.2f}".format(sudoku_class_a.__name__, sudoku_class_b.__name__, pearsons_rho))
 
 if __name__ == "__main__":
-    sudoku_path = "../data/10k_25.txt"
-    mc = MetricComparison(
-        sudoku_path,
-        SpatialAnalysisSudoku, DeterminantSudoku, EigenvalueSudoku, CentroidSudoku,
-        precision=2
+    sudoku_path = "../data/100_25.txt"
+    precision = 2
+
+    sudoku_collections = [
+        SpatialAnalysisSudokuCollection(
+            sudokus=read_line_sudoku_file(sudoku_path, sudoku_class=sudoku_class),
+            precision=precision
+        )
+        for sudoku_class in [SpatialAnalysisSudoku, DeterminantSudoku, EigenvalueSudoku, CentroidSudoku]
+    ]
+    sudoku_collections.append(
+        EntropySudokuCollection(
+            sudokus=read_line_sudoku_file(sudoku_path, sudoku_class=Sudoku),
+            precision=precision
+        )
     )
+
+    mc = MetricComparison(sudoku_path, sudoku_collections, precision=precision)
     mc.gather_distributions()
     mc.compute_metrics_correlations()
-

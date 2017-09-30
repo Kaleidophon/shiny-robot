@@ -16,7 +16,7 @@ from experiments.distances import SpatialAnalysisSudokuCollection, SpatialAnalys
 from general import read_line_sudoku_file
 
 
-def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lambda sudoku: sudoku.average_distance):
+def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lambda sudoku: sudoku.metric):
     assert goal >= 17  # Minimum number for solvable sudokus
     assert eliminate_randomly < 64
     assert type(sudoku) == SpatialAnalysisSudoku
@@ -68,5 +68,5 @@ if __name__ == "__main__":
         #print(str(create_extreme_sudoku(sudoku, objective=lambda sudoku: sudoku.average_distance)))
 
         # Maximizing negative average distance -> Minimizing average distance -> dense sudokus
-        print(str(create_extreme_sudoku(sudoku, objective=lambda sudoku: -sudoku.average_distance)))
+        print(str(create_extreme_sudoku(sudoku, objective=lambda sudoku: -sudoku.metric)))
 
