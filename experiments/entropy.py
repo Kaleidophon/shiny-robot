@@ -35,7 +35,6 @@ class EntropySudokuCollection(SpatialAnalysisSudokuCollection):
         return EntropySudoku
 
     def _build_probabilities(self):
-
         for _, sudoku in self.sudokus.items():
             for x in range(9):
                 for y in range(9):
@@ -82,7 +81,7 @@ class EntropySudoku(Sudoku):
 
 
 if __name__ == "__main__":
-    sudoku_path = "../data/10k_25.txt"
+    sudoku_path = "../data/49k_17.txt"
     sudokus = read_line_sudoku_file(sudoku_path)
 
     esc = EntropySudokuCollection(sudokus)
@@ -99,4 +98,7 @@ if __name__ == "__main__":
     for _, sudoku in lowest.items():
         print(str(sudoku))
 
-    esc.plot_average_metric_distribution(title=False)
+    #esc.plot_average_metric_distribution(title=False)
+    #esc.plot_heatmap()
+    #esc.plot_heatmap(1000)
+    esc.plot_heatmap(-1000)

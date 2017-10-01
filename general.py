@@ -49,6 +49,19 @@ class Sudoku:
                 representation += divider
         return representation
 
+    @property
+    def given_coordinates(self):
+        given_coordinates = []
+        dimension = len(self.list_representation)
+
+        # Get coordinates of given numbers
+        for x in range(dimension):
+            for y in range(dimension):
+                if self.list_representation[x][y] != 0:
+                    given_coordinates.append((x, y))
+
+        return given_coordinates
+
     @staticmethod
     def _to_lists(raw_data):
         list_representation, current_row = [], []
