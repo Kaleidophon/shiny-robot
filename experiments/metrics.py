@@ -91,7 +91,7 @@ class MetricComparison:
                     print("{:>23} |{:>23} | {:.2f}".format(sudoku_class_a.__name__, sudoku_class_b.__name__, pearsons_rho))
 
 if __name__ == "__main__":
-    sudoku_path = "../data/100_25.txt"
+    sudoku_path = "../data/10k_25.txt"
     precision = 2
 
     sudoku_collections = [
