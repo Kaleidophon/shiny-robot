@@ -5,7 +5,6 @@ Functions concerning the input and output of Sudokus.
 
 # STD
 import codecs
-import hashlib
 
 
 class SudokuCollection:
@@ -50,6 +49,19 @@ class Sudoku:
                 representation += divider
         return representation
 
+    @property
+    def given_coordinates(self):
+        given_coordinates = []
+        dimension = len(self.list_representation)
+
+        # Get coordinates of given numbers
+        for x in range(dimension):
+            for y in range(dimension):
+                if self.list_representation[x][y] != 0:
+                    given_coordinates.append((x, y))
+
+        return given_coordinates
+
     @staticmethod
     def _to_lists(raw_data):
         list_representation, current_row = [], []
@@ -63,6 +75,19 @@ class Sudoku:
 
         return list_representation
 
+    @property
+    def raw(self):
+        return self.raw_data
+
+    def _to_raw(self):
+        return "".join(["".join([str(cell) for cell in row]) for row in self.list_representation])
+
+    def update(self):
+        self.raw_data = self._to_raw()
+
+    def __copy__(self):
+        return self.__class__(self.raw_data)
+
 
 def read_line_sudoku_file(path, sudoku_class=Sudoku):
     sudokus = {}
@@ -74,7 +99,7 @@ def read_line_sudoku_file(path, sudoku_class=Sudoku):
             sudoku = sudoku_class(line)
             sudokus[sudoku.uid] = sudoku
             i += 1
-            print("\rProcessing {} sudokus...".format(i), end="", flush=True)
+            print("\rProcessing {} {}...".format(i, sudoku_class.__name__ + "s"), end="", flush=True)
 
     print("")
 
@@ -82,7 +107,7 @@ def read_line_sudoku_file(path, sudoku_class=Sudoku):
 
 
 if __name__ == "__main__":
-    sudoku_path = "./data/10k_25.txt"
+    sudoku_path = "./data/100_25.txt"
     sudokus = read_line_sudoku_file(sudoku_path)
 
 
