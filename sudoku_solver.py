@@ -7,31 +7,40 @@ import sys, getopt
 import time
 import subprocess
 import numpy as np
+import copy
 
 
 
 class Sudoku_solver:
     def __solve__(self,problemset):
-        unsolved_sudoku = problemset
         print('Problem:')
         pprint(problemset)
-        conflicts = self.solve(problemset)
+        all_statistics = self.solve(problemset)
         print('Answer:')
         pprint(problemset)
-        solution = problemset
-        #unique = self.is_proper(unsolved_sudoku,solution)
-        return conflicts
 
-    def is_proper(self,problemset, solution):
+        #print the statistics
+        print(all_statistics)
+
+        return all_statistics
+
+    def is_proper(self,problemset):
         #find unique solution
-        unsolved_sudoku = problemset
+        unsolved_sudoku = copy.deepcopy(problemset)
+
         for i in range(1,10):
             self.solve(problemset)
-            if solution != problemset:
-                print("Found mult solutions , improper sudoku")
-                return 0
+            solution = copy.deepcopy(problemset)
+            if i == 1:
+                initial_solution = copy.deepcopy(solution)
+            else:
+                if initial_solution != solution:
+                    print("Found mult solutions , improper sudoku")
+                    print("INITIAL SOLUTION",initial_solution)
+                    print("ANOTHER SOLUTION",solution)
+                    return 0
 
-            problemset = unsolved_sudoku
+            problemset = copy.deepcopy(unsolved_sudoku)
         return 1
 
 
@@ -91,24 +100,25 @@ class Sudoku_solver:
 
         # Print number SAT clause
         numclause = len(clauses)
-        print("P CNF " + str(numclause) + "(number of clauses)")
+        #print("P CNF " + str(numclause) + "(number of clauses)")
 
         np.save("CNF_clauses", clauses)
+
+        #sol = set(pycosat.solve(clauses, verbose=1))
+
 
         # solve the SAT problem
         start = time.time()
         proc = subprocess.Popen(["python", "terminal_py_solve.py"],
         stdout=subprocess.PIPE)
         out = proc.communicate()[0]
-        print(out)
 
-        conflicts = self.parse_statistics(out)
+        all_statistics = self.parse_statistics(out)
 
-        #sol = set(pycosat.solve(clauses, verbose=1))
         out = 5
 
         end = time.time()
-        print("Time: " + str(end - start))
+        #print("Time: " + str(end - start))
 
 
         sol = set(pycosat.solve(clauses))
@@ -122,23 +132,45 @@ class Sudoku_solver:
             for j in range(1, 10):
                 grid[i - 1][j - 1] = read_cell(i, j)
 
-        return conflicts
+        return all_statistics
 
     def parse_statistics(self,output):
-        output_utf8 = output.decode("utf-8")
-        rows_output = output_utf8.split('\n')
-        print("ROOOOOOOOOOW:", rows_output)
-        conflicts = rows_output[9].split(' ')
-        print("CONFILCTS",conflicts[19])
+        statistics = np.array(list(filter(lambda x: x != "" and self.is_number(x), output.decode().split(" ")))[-10:]).astype(
+            np.float)
+        all_statistics =  {"seconds": statistics[0],
+                           "level": statistics[1],
+                           "variables": statistics[2],
+                           "used": statistics[3],
+                           "original": statistics[4],
+                           "conflicts": statistics[5],
+                           "learned": statistics[6],
+                           "limit": statistics[7],
+                           "agility": statistics[8],
+                           "MB": statistics[9]}
+        return all_statistics
 
-        return conflicts
 
 
-
+    def is_number(self,s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
 
 
 if __name__ == '__main__':
     from pprint import pprint
+
+    hard = [[0, 2, 0, 0, 0, 0, 0, 3, 0],
+            [0, 0, 0, 6, 0, 1, 0, 0, 0],
+            [0, 6, 8, 2, 0, 0, 0, 0, 5],
+            [0, 0, 9, 0, 0, 8, 3, 0, 0],
+            [0, 4, 6, 0, 0, 0, 7, 5, 0],
+            [0, 0, 1, 3, 0, 0, 4, 0, 0],
+            [9, 0, 0, 0, 0, 7, 5, 1, 0],
+            [0, 0, 0, 1, 0, 4, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 9, 0]]
 
     evil = [[0, 2, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 6, 0, 0, 0, 0, 3],
@@ -150,5 +182,16 @@ if __name__ == '__main__':
             [5, 0, 0, 0, 0, 9, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 4, 0]]
 
+    easy = [[0, 0, 0, 1, 0, 9, 4, 2, 7],
+            [1, 0, 9, 8, 0, 0, 0, 0, 6],
+            [0, 0, 7, 0, 5, 0, 1, 0, 8],
+            [0, 5, 6, 0, 0, 0, 0, 8, 2],
+            [0, 0, 0, 0, 2, 0, 0, 0, 0],
+            [9, 4, 0, 0, 0, 0, 6, 1, 0],
+            [7, 0, 4, 0, 6, 0, 9, 0, 0],
+            [6, 0, 0, 0, 0, 8, 2, 0, 5],
+            [2, 9, 5, 3, 0, 1, 0, 0, 0]]
+
     solver = Sudoku_solver()
     solver.__solve__(evil)
+    #solver.is_proper(evil)
