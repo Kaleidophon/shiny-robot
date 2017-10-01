@@ -42,19 +42,6 @@ class SpatialAnalysisSudoku(Sudoku):
                 self.distance_matrix[i][j] += self.numbers_distance(given_coordinates[i], given_coordinates[j])
 
     @property
-    def given_coordinates(self):
-        given_coordinates = []
-        dimension = len(self.list_representation)
-
-        # Get coordinates of given numbers
-        for x in range(dimension):
-            for y in range(dimension):
-                if self.list_representation[x][y] != 0:
-                    given_coordinates.append((x, y))
-
-        return given_coordinates
-
-    @property
     def metric(self):
         shape = self.distance_matrix.shape
         return sum([sum(row) for row in self.distance_matrix]) / (shape[0] * shape[1])
@@ -247,10 +234,34 @@ class SpatialAnalysisSudokuCollection(SudokuCollection):
 
         plt.show()
 
+    def plot_heatmap(self, n=0):
+        """
+        Generate heat map of given numbers for n sudokus. If n is 0, a heat map for all the sudokus in this collection
+        will be created. If n is positive, a heat map with the n highest scoring sudokus according to the metric of the
+        sudokus in this collection will be created, the same accordingly for the lowest ones when n is negative.
+        """
+        heatmap_sudokus = None
+        if n == 0:
+            heatmap_sudokus = self.sudokus
+        if n > 0:
+            heatmap_sudokus = self.get_n_highest(n)
+        if n < 0:
+            heatmap_sudokus = self.get_n_lowest(-n)
+
+        heatmap_data = numpy.zeros(shape=(9, 9))
+
+        for _, sudoku in heatmap_sudokus.items():
+            for x, y in sudoku.given_coordinates:
+                heatmap_data[x][y] += 1
+
+        plt.imshow(heatmap_data, cmap="seismic", interpolation='nearest')
+        plt.axis('off')
+        plt.show()
+
 
 if __name__ == "__main__":
-    sudoku_path = "../data/10k_25.txt"
-    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=SpatialAnalysisSudoku)
+    sudoku_path = "../data/49k_17.txt"
+    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=CentroidSudoku)
     sasc = SpatialAnalysisSudokuCollection(sudokus, precision=2)
     sasc.calculate_metric_distribution()
 
@@ -267,3 +278,7 @@ if __name__ == "__main__":
 
     #sasc.plot_average_metric_distribution(title=False)
     #sasc.plot_average_and_variance()
+
+    #sasc.plot_heatmap()
+    #sasc.plot_heatmap(1000)
+    #sasc.plot_heatmap(-1000)
