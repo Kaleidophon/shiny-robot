@@ -14,12 +14,12 @@ import numpy
 # PROJECT
 from experiments.distances import SpatialAnalysisSudokuCollection, SpatialAnalysisSudoku
 from general import read_line_sudoku_file
+from sudoku_solver import SudokuSolver
 
 
 def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lambda sudoku: sudoku.metric):
     assert goal >= 17  # Minimum number for solvable sudokus
     assert eliminate_randomly < 64
-    assert type(sudoku) == SpatialAnalysisSudoku
     given_coordinates = sudoku.given_coordinates
 
     # Step 1: Remove n random numbers from the sudoku
@@ -51,6 +51,9 @@ def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lamb
         sudoku[x_max][y_max] = 0
         sudoku.update()
         print(str(sudoku))
+
+        solver = SudokuSolver()
+        print(solver.is_proper(sudoku.list_representation))
 
     sudoku.update()  # Save changes internally
     return sudoku
