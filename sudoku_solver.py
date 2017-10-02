@@ -28,28 +28,6 @@ class SudokuSolver:
 
         return all_statistics
 
-    def is_proper(self,problemset):
-        #find unique solution
-        if not os.path.isfile(CLAUSES_NP_FILE_PATH):
-            self.create_and_save_claues(problemset)
-
-        unsolved_sudoku = copy.deepcopy(problemset)
-
-        for i in range(1,10):
-            self.solve(problemset)
-            solution = copy.deepcopy(problemset)
-            if i == 1:
-                initial_solution = copy.deepcopy(solution)
-            else:
-                if initial_solution != solution:
-                    print("Found mult solutions , improper sudoku")
-                    print("INITIAL SOLUTION",initial_solution)
-                    print("ANOTHER SOLUTION",solution)
-                    return 0
-
-            problemset = copy.deepcopy(unsolved_sudoku)
-        return 1
-
     @staticmethod
     def v(i, j, d):
         return 81 * (i - 1) + 9 * (j - 1) + d
@@ -101,12 +79,16 @@ class SudokuSolver:
         numclause = len(clauses)
         # print("P CNF " + str(numclause) + "(number of clauses)")
 
-        c = CLAUSES_NP_FILE_PATH
         np.save(CLAUSES_NP_FILE_PATH + "/CNF_clauses.npy", clauses)
+        return clauses
+
+    def is_proper(self, sudoku):
+        clauses = self.create_and_save_claues(sudoku.list_representation)
+        return len(list(pycosat.itersolve(clauses))) == 1
 
     def solve(self,grid):
         # solve a Sudoku problem
-        self.create_and_save_claues(grid)
+        clauses = self.create_and_save_claues(grid)
         #sol = set(pycosat.solve(clauses, verbose=1))
 
 
@@ -124,16 +106,18 @@ class SudokuSolver:
         #print("Time: " + str(end - start))
 
 
-        # sol = set(pycosat.solve(clauses))
-        # def read_cell(i, j):
-        #     # return the digit of cell i, j according to the solution
-        #     for d in range(1, 10):
-        #         if self.v(i, j, d) in sol:
-        #             return d
-        #
-        # for i in range(1, 10):
-        #     for j in range(1, 10):
-        #         grid[i - 1][j - 1] = read_cell(i, j)
+        sol = set(pycosat.solve(clauses))
+        print("#Solutions", len(list(pycosat.itersolve(clauses))))
+
+        def read_cell(i, j):
+            # return the digit of cell i, j according to the solution
+            for d in range(1, 10):
+                if self.v(i, j, d) in sol:
+                    return d
+
+        for i in range(1, 10):
+            for j in range(1, 10):
+                grid[i - 1][j - 1] = read_cell(i, j)
 
         return all_statistics
 
