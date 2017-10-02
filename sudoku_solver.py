@@ -4,16 +4,17 @@ import subprocess
 import numpy as np
 import copy
 import os
+import os.path
 
 import terminal_py_solve
 
 TERMINAL_SOLVE_PATH = os.path.abspath(terminal_py_solve.__file__)
-
+CLAUSES_NP_FILE_PATH = os.path.abspath(terminal_py_solve.__file__.replace("terminal_py_solve.py", "/"))
 
 class SudokuSolver:
 
     def solve_sudoku(self, sudoku):
-        self._solve(sudoku.list_representation)
+        return self._solve(sudoku.list_representation)
 
     def _solve(self, problemset):
         #print('Problem:')
@@ -29,6 +30,9 @@ class SudokuSolver:
 
     def is_proper(self,problemset):
         #find unique solution
+        if not os.path.isfile(CLAUSES_NP_FILE_PATH):
+            self.create_and_save_claues(problemset)
+
         unsolved_sudoku = copy.deepcopy(problemset)
 
         for i in range(1,10):
@@ -83,8 +87,7 @@ class SudokuSolver:
         assert len(res) == 81 * (1 + 36) + 27 * 324
         return res
 
-    def solve(self,grid):
-        # solve a Sudoku problem
+    def create_and_save_claues(self, grid):
         clauses = self.sudoku_clauses()
         # print(len(clauses))
         for i in range(1, 10):
@@ -96,16 +99,20 @@ class SudokuSolver:
 
         # Print number SAT clause
         numclause = len(clauses)
-        #print("P CNF " + str(numclause) + "(number of clauses)")
+        # print("P CNF " + str(numclause) + "(number of clauses)")
 
-        np.save("CNF_clauses", clauses)
+        c = CLAUSES_NP_FILE_PATH
+        np.save(CLAUSES_NP_FILE_PATH + "/CNF_clauses.npy", clauses)
 
+    def solve(self,grid):
+        # solve a Sudoku problem
+        self.create_and_save_claues(grid)
         #sol = set(pycosat.solve(clauses, verbose=1))
 
 
         # solve the SAT problem
         start = time.time()
-        proc = subprocess.Popen(['/bin/sh', '-c', "python3", TERMINAL_SOLVE_PATH],
+        proc = subprocess.Popen(["python3", TERMINAL_SOLVE_PATH],
         stdout=subprocess.PIPE)
         out = proc.communicate()[0]
 
@@ -117,16 +124,16 @@ class SudokuSolver:
         #print("Time: " + str(end - start))
 
 
-        sol = set(pycosat.solve(clauses))
-        def read_cell(i, j):
-            # return the digit of cell i, j according to the solution
-            for d in range(1, 10):
-                if self.v(i, j, d) in sol:
-                    return d
-
-        for i in range(1, 10):
-            for j in range(1, 10):
-                grid[i - 1][j - 1] = read_cell(i, j)
+        # sol = set(pycosat.solve(clauses))
+        # def read_cell(i, j):
+        #     # return the digit of cell i, j according to the solution
+        #     for d in range(1, 10):
+        #         if self.v(i, j, d) in sol:
+        #             return d
+        #
+        # for i in range(1, 10):
+        #     for j in range(1, 10):
+        #         grid[i - 1][j - 1] = read_cell(i, j)
 
         return all_statistics
 

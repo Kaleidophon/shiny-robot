@@ -1,9 +1,9 @@
 import pycosat
+import sys
 
-import numpy as np
+import numpy
 
 if __name__ == '__main__':
-    from pprint import pprint
-
-clauses = np.load("CNF_clauses.npy")
-pycosat.solve(clauses, verbose=1)
+    CLAUSES_NP_FILE_PATH = sys.modules[__name__].__file__.replace("terminal_py_solve.py", "/")
+    clauses = numpy.load(CLAUSES_NP_FILE_PATH + "/CNF_clauses.npy")
+    pycosat.solve(clauses, verbose=1)

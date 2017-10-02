@@ -12,7 +12,7 @@ import random
 import numpy
 
 # PROJECT
-from experiments.distances import SpatialAnalysisSudokuCollection, SpatialAnalysisSudoku
+from experiments.distances import SpatialAnalysisSudokuCollection, SpatialAnalysisSudoku, CentroidSudoku
 from general import read_line_sudoku_file
 from sudoku_solver import SudokuSolver
 
@@ -53,7 +53,7 @@ def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lamb
         print(str(sudoku))
 
         solver = SudokuSolver()
-        print(solver.is_proper(sudoku.list_representation))
+        print("proper", solver.is_proper(sudoku.list_representation))
 
     sudoku.update()  # Save changes internally
     return sudoku
@@ -61,7 +61,7 @@ def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lamb
 if __name__ == "__main__":
 
     sudoku_path = "../data/100_solved.txt"
-    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=SpatialAnalysisSudoku)
+    sudokus = read_line_sudoku_file(sudoku_path, sudoku_class=CentroidSudoku)
     sasc = SpatialAnalysisSudokuCollection(sudokus, precision=2)
 
     for _, sudoku in sudokus.items():
