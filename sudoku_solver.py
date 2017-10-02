@@ -1,23 +1,26 @@
-import codecs
-import hashlib
-import operator
-import itertools
 import pycosat
-import sys, getopt
 import time
 import subprocess
 import numpy as np
 import copy
+import os
+
+import terminal_py_solve
+
+TERMINAL_SOLVE_PATH = os.path.abspath(terminal_py_solve.__file__)
 
 
+class SudokuSolver:
 
-class Sudoku_solver:
-    def __solve__(self,problemset):
-        print('Problem:')
-        pprint(problemset)
+    def solve_sudoku(self, sudoku):
+        self._solve(sudoku.list_representation)
+
+    def _solve(self, problemset):
+        #print('Problem:')
+        #pprint(problemset)
         all_statistics = self.solve(problemset)
-        print('Answer:')
-        pprint(problemset)
+        #print('Answer:')
+        #pprint(problemset)
 
         #print the statistics
         print(all_statistics)
@@ -43,14 +46,7 @@ class Sudoku_solver:
             problemset = copy.deepcopy(unsolved_sudoku)
         return 1
 
-
-
-
-
-
-
     @staticmethod
-
     def v(i, j, d):
         return 81 * (i - 1) + 9 * (j - 1) + d
 
@@ -109,7 +105,7 @@ class Sudoku_solver:
 
         # solve the SAT problem
         start = time.time()
-        proc = subprocess.Popen(["python", "terminal_py_solve.py"],
+        proc = subprocess.Popen(['/bin/sh', '-c', "python3", TERMINAL_SOLVE_PATH],
         stdout=subprocess.PIPE)
         out = proc.communicate()[0]
 
@@ -137,7 +133,7 @@ class Sudoku_solver:
     def parse_statistics(self,output):
         statistics = np.array(list(filter(lambda x: x != "" and self.is_number(x), output.decode().split(" ")))[-10:]).astype(
             np.float)
-        all_statistics =  {"seconds": statistics[0],
+        all_statistics = {"seconds": statistics[0],
                            "level": statistics[1],
                            "variables": statistics[2],
                            "used": statistics[3],
@@ -149,9 +145,7 @@ class Sudoku_solver:
                            "MB": statistics[9]}
         return all_statistics
 
-
-
-    def is_number(self,s):
+    def is_number(self, s):
         try:
             float(s)
             return True
@@ -192,6 +186,6 @@ if __name__ == '__main__':
             [6, 0, 0, 0, 0, 8, 2, 0, 5],
             [2, 9, 5, 3, 0, 1, 0, 0, 0]]
 
-    solver = Sudoku_solver()
-    solver.__solve__(evil)
+    solver = SudokuSolver()
+    solver._solve(evil)
     #solver.is_proper(evil)
