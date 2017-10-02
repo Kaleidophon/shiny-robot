@@ -6,10 +6,26 @@ import copy
 import os
 import os.path
 
+from io import StringIO
+import sys
+
+
+class capturing(list):
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio    # free up some memory
+        sys.stdout = self._stdout
+
 import terminal_py_solve
 
 TERMINAL_SOLVE_PATH = os.path.abspath(terminal_py_solve.__file__)
 CLAUSES_NP_FILE_PATH = os.path.abspath(terminal_py_solve.__file__.replace("terminal_py_solve.py", "/"))
+
 
 class SudokuSolver:
 
@@ -24,7 +40,7 @@ class SudokuSolver:
         #pprint(problemset)
 
         #print the statistics
-        print(all_statistics)
+        #print(all_statistics)
 
         return all_statistics
 
@@ -86,7 +102,7 @@ class SudokuSolver:
         clauses = self.create_and_save_claues(sudoku.list_representation)
         return len(list(pycosat.itersolve(clauses))) == 1
 
-    def solve(self,grid):
+    def solve(self, grid):
         # solve a Sudoku problem
         clauses = self.create_and_save_claues(grid)
         #sol = set(pycosat.solve(clauses, verbose=1))
@@ -107,7 +123,7 @@ class SudokuSolver:
 
 
         sol = set(pycosat.solve(clauses))
-        print("#Solutions", len(list(pycosat.itersolve(clauses))))
+        #print("#Solutions", len(list(pycosat.itersolve(clauses))))
 
         def read_cell(i, j):
             # return the digit of cell i, j according to the solution
@@ -121,7 +137,7 @@ class SudokuSolver:
 
         return all_statistics
 
-    def parse_statistics(self,output):
+    def parse_statistics(self, output):
         statistics = np.array(list(filter(lambda x: x != "" and self.is_number(x), output.decode().split(" ")))[-10:]).astype(
             np.float)
         all_statistics = {"seconds": statistics[0],
@@ -142,41 +158,3 @@ class SudokuSolver:
             return True
         except ValueError:
             return False
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-
-    hard = [[0, 2, 0, 0, 0, 0, 0, 3, 0],
-            [0, 0, 0, 6, 0, 1, 0, 0, 0],
-            [0, 6, 8, 2, 0, 0, 0, 0, 5],
-            [0, 0, 9, 0, 0, 8, 3, 0, 0],
-            [0, 4, 6, 0, 0, 0, 7, 5, 0],
-            [0, 0, 1, 3, 0, 0, 4, 0, 0],
-            [9, 0, 0, 0, 0, 7, 5, 1, 0],
-            [0, 0, 0, 1, 0, 4, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 9, 0]]
-
-    evil = [[0, 2, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 6, 0, 0, 0, 0, 3],
-            [0, 7, 4, 0, 8, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 3, 0, 0, 2],
-            [0, 8, 0, 0, 4, 0, 0, 1, 0],
-            [6, 0, 0, 5, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 7, 8, 0],
-            [5, 0, 0, 0, 0, 9, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 4, 0]]
-
-    easy = [[0, 0, 0, 1, 0, 9, 4, 2, 7],
-            [1, 0, 9, 8, 0, 0, 0, 0, 6],
-            [0, 0, 7, 0, 5, 0, 1, 0, 8],
-            [0, 5, 6, 0, 0, 0, 0, 8, 2],
-            [0, 0, 0, 0, 2, 0, 0, 0, 0],
-            [9, 4, 0, 0, 0, 0, 6, 1, 0],
-            [7, 0, 4, 0, 6, 0, 9, 0, 0],
-            [6, 0, 0, 0, 0, 8, 2, 0, 5],
-            [2, 9, 5, 3, 0, 1, 0, 0, 0]]
-
-    solver = SudokuSolver()
-    solver._solve(evil)
-    #solver.is_proper(evil)
