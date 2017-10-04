@@ -42,6 +42,18 @@ class SpatialAnalysisSudoku(Sudoku):
                 self.distance_matrix[i][j] += self.numbers_distance(given_coordinates[i], given_coordinates[j])
 
     @property
+    def given_coordinates(self):
+        given_coordinates = []
+
+        # Get coordinates of given numbers
+        for x in range(9):
+            for y in range(9):
+                if self.list_representation[x][y] != 0:
+                    given_coordinates.append((x, y))
+
+        return given_coordinates
+
+    @property
     def metric(self):
         shape = self.distance_matrix.shape
         return sum([sum(row) for row in self.distance_matrix]) / (shape[0] * shape[1])

@@ -52,11 +52,10 @@ class Sudoku:
     @property
     def given_coordinates(self):
         given_coordinates = []
-        dimension = len(self.list_representation)
 
         # Get coordinates of given numbers
-        for x in range(dimension):
-            for y in range(dimension):
+        for x in range(9):
+            for y in range(9):
                 if self.list_representation[x][y] != 0:
                     given_coordinates.append((x, y))
 
