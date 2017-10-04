@@ -1,7 +1,7 @@
 # shiny-robot
-#### Analyzing how the spatial distribution of given number in a sudoku influences the difficulty for a SAT solver. 
+### Analyzing how the spatial distribution of given number in a sudoku influences the difficulty for a SAT solver. 
 
-![](img/heatmaps_animated.gif =100x100)
+![](img/heatmaps_animated.gif)
 
 The goal of this project was to examine whether the spatial distribution of given number has an influence onto the 
 difficulty of a sudoku for a satisfiability solver.
