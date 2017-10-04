@@ -1,6 +1,6 @@
 # shiny-robot
 
-![alt text](img/heatmaps_animated.gif)
+![](img/heatmaps_animated.gif)
 
 The goal of this project was to examine whether the spatial distribution of given number has an influence onto the 
 difficulty of a sudoku for a satisfiability solver.
@@ -11,7 +11,7 @@ sudoku grid, the average distance of all given numbers to their common centroid 
 In the end, no correlation between the number of conflicts during the solving process and the measure dispersion metrics
 was found.
 
-![alt text](img/10k_25_1000_centroid.png)
+![](img/10k_25_1000_centroid.png)
 
 ## Content
 
