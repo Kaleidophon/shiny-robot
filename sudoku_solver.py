@@ -1,55 +1,47 @@
-import pycosat
-import time
-import subprocess
-import numpy as np
-import copy
-import os
+# -*- coding: utf-8 -*-
+"""
+Module comprising a SAT solver to solve sudokus using the efficient encodings.
+"""
+
+# STD
 import os.path
+import subprocess
 
-from io import StringIO
-import sys
+# EXT
+import pycosat
+import numpy as np
 
-
-class capturing(list):
-    def __enter__(self):
-        self._stdout = sys.stdout
-        sys.stdout = self._stringio = StringIO()
-        return self
-
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        del self._stringio    # free up some memory
-        sys.stdout = self._stdout
-
+# PROJECT
 import terminal_py_solve
 
+# CONST
 TERMINAL_SOLVE_PATH = os.path.abspath(terminal_py_solve.__file__)
 CLAUSES_NP_FILE_PATH = os.path.abspath(terminal_py_solve.__file__.replace("terminal_py_solve.py", "/"))
 
 
 class SudokuSolver:
-
-    def solve_sudoku(self, sudoku):
-        return self._solve(sudoku.list_representation)
-
-    def _solve(self, problemset):
-        #print('Problem:')
-        #pprint(problemset)
-        all_statistics = self.solve(problemset)
-        #print('Answer:')
-        #pprint(problemset)
-
-        #print the statistics
-        #print(all_statistics)
-
-        return all_statistics
+    """
+    SAT solver to solve sudokus.
+    """
+    clauses = []
 
     @staticmethod
     def v(i, j, d):
         return 81 * (i - 1) + 9 * (j - 1) + d
 
-    # Reduces Sudoku problem to a SAT clauses
+    @property
     def sudoku_clauses(self):
+        """
+        Generate logic clauses for sudoku. Use cache if they were already created.
+        """
+        if len(self.clauses) == 0:
+            self.clauses = self._sudoku_clauses()
+        return list(self.clauses)
+
+    def _sudoku_clauses(self):
+        """
+        Efficient encoding for sudokus.
+        """
         res = []
         # for all cells, ensure that the each cell:
         for i in range(1, 10):
@@ -81,8 +73,8 @@ class SudokuSolver:
         assert len(res) == 81 * (1 + 36) + 27 * 324
         return res
 
-    def create_and_save_claues(self, grid):
-        clauses = self.sudoku_clauses()
+    def create_and_save_clauses(self, grid):
+        clauses = self.sudoku_clauses
         # print(len(clauses))
         for i in range(1, 10):
             for j in range(1, 10):
@@ -99,60 +91,34 @@ class SudokuSolver:
         return clauses
 
     def is_proper(self, sudoku):
-        clauses = self.create_and_save_claues(sudoku.list_representation)
+        clauses = self.create_and_save_clauses(sudoku.list_representation)
         return len(list(pycosat.itersolve(clauses))) == 1
 
-    def solve(self, grid):
-        # solve a Sudoku problem
-        clauses = self.create_and_save_claues(grid)
-        #sol = set(pycosat.solve(clauses, verbose=1))
-
+    def solve_sudoku(self, sudoku):
+        clauses = self.create_and_save_clauses(sudoku.list_representation)
 
         # solve the SAT problem
-        start = time.time()
         proc = subprocess.Popen(["python3", TERMINAL_SOLVE_PATH],
         stdout=subprocess.PIPE)
         out = proc.communicate()[0]
 
-        all_statistics = self.parse_statistics(out)
-
-        out = 5
-
-        end = time.time()
-        #print("Time: " + str(end - start))
-
-
-        sol = set(pycosat.solve(clauses))
-        #print("#Solutions", len(list(pycosat.itersolve(clauses))))
-
-        def read_cell(i, j):
-            # return the digit of cell i, j according to the solution
-            for d in range(1, 10):
-                if self.v(i, j, d) in sol:
-                    return d
-
-        for i in range(1, 10):
-            for j in range(1, 10):
-                grid[i - 1][j - 1] = read_cell(i, j)
-
-        return all_statistics
+        return self.parse_statistics(out)
 
     def parse_statistics(self, output):
-        statistics = np.array(list(filter(lambda x: x != "" and self.is_number(x), output.decode().split(" ")))[-10:]).astype(
-            np.float)
-        all_statistics = {"seconds": statistics[0],
-                           "level": statistics[1],
-                           "variables": statistics[2],
-                           "used": statistics[3],
-                           "original": statistics[4],
-                           "conflicts": statistics[5],
-                           "learned": statistics[6],
-                           "limit": statistics[7],
-                           "agility": statistics[8],
-                           "MB": statistics[9]}
-        return all_statistics
+        # Parse output
+        statistics = np.array(
+            list(filter(
+                lambda x: x != "" and self.is_number(x), output.decode().split(" ")
+            ))[-10:]
+        ).astype(np.float)
 
-    def is_number(self, s):
+        return dict(zip(
+            ["seconds", "level", "variables", "used", "original", "conflicts", "learned", "limit", "agility", "MB"],
+            statistics[:10]
+        ))
+
+    @staticmethod
+    def is_number(s):
         try:
             float(s)
             return True

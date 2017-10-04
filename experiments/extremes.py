@@ -2,23 +2,30 @@
 """
 Functions used to create Sudokus which given numbers are either spread out within the sudoku or as closely together as
 possible.
+
+########################################################################################################################
+WARNING: THIS CODE IS COMPLICATED AND DOESN'T WORK.
+Apparently, removing numbers that maximize / minimize the dispersion metric lead to improper sudokus quickly. The
+algorithm usually gets stuck between 45 - 60 given numbers. Following heuristics were tried out:
+- When looking for a number to remove, only takes ones, twos .. etc.
+- When looking for a number to remove, only take on number (1-9) chosen randomly
+
+It still doesn't work.
+########################################################################################################################
 """
 
 # STD
 import copy
 import random
 
-# EXT
-import numpy
-
 # PROJECT
-from experiments.distances import SpatialAnalysisSudokuCollection, SpatialAnalysisSudoku, CentroidSudoku
+from experiments.distances import SpatialAnalysisSudokuCollection, CentroidSudoku
 from general import read_line_sudoku_file
 from sudoku_solver import SudokuSolver
 
 
 def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lambda sudoku: sudoku.metric):
-    #assert goal >= 17  # Minimum number for solvable sudokus
+    assert goal >= 17  # Minimum number for solvable sudokus
     assert eliminate_randomly < 64
     given_coordinates = sudoku.given_coordinates
     solver = SudokuSolver()
@@ -30,14 +37,18 @@ def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lamb
 
     # Step 2: Try to optimize sudoku according to the objective function
     given_coordinates = sudoku.given_coordinates
+
+    dead_numbers = set()
+    resample = lambda dead_numbers: random.sample(set(range(1, 10)) - dead_numbers, 1)[0]
     while len(given_coordinates) > goal:
-
-        if len(given_coordinates) % 2 == 0:
-            x, y = random.sample(given_coordinates, 1)[0]
-            sudoku[x][y] = 0
-            sudoku.update()
-
+        current_number_to_remove = resample(dead_numbers)
         deltas = {}  # Changes in value for objective function given the removal of coordinates of index i
+
+        if len(dead_numbers) == 9:
+            print("Fail at {} given numbers".format(len(given_coordinates)))
+            import time
+            time.sleep(4)
+            return sudoku
 
         for x, y in given_coordinates:
             temp_sudoku = copy.copy(sudoku)
@@ -47,14 +58,24 @@ def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lamb
             new = objective(temp_sudoku)
             delta = new - old
 
-            deltas[(x, y)] = delta
+            deltas[(x, y)] = (delta, sudoku[x][y])
 
-        # TODO: Check whether sudokus are still proper
+        max_delta_indices = list(reversed(
+            sorted(zip(range(len(deltas)), list(deltas.values())), key=lambda x: x[1][0])
+        ))
+        max_delta_indices = list(filter(
+            lambda delta_tuple: delta_tuple[1][1] == current_number_to_remove, max_delta_indices
+        ))
 
-        max_delta_indices = list(reversed(sorted(zip(range(len(deltas)), list(deltas.values())), key=lambda x: x[1])))
+        print(current_number_to_remove)
+        print("Indices", max_delta_indices)
+        if len(max_delta_indices) == 0:
+            current_number_to_remove = resample(dead_numbers)
+            continue
 
         # Iterate through all the values, starting with the max, to see whether deleting the associated given number
         # results in a proper sudoku or not
+        removed_number = False
         for max_delta_index, max_delta in max_delta_indices:
             if max_delta_index == len(max_delta_indices)-1:
                 print("Fail at {} given numbers".format(len(given_coordinates)))
@@ -73,7 +94,13 @@ def create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=50, objective=lamb
                 sudoku[x_max][y_max] = 0
                 sudoku.update()
                 print(str(sudoku))
+
+                removed_number = True
+                dead_numbers = set()
                 break
+
+        if not removed_number:
+            dead_numbers.add(current_number_to_remove)
 
     sudoku.update()  # Save changes internally
     return sudoku
@@ -91,5 +118,6 @@ if __name__ == "__main__":
         #print(str(create_extreme_sudoku(sudoku, objective=lambda sudoku: sudoku.average_distance)))
 
         # Maximizing negative average distance -> Minimizing average distance -> dense sudokus
-        print(str(create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=10, objective=lambda sudoku: -sudoku.metric)))
-
+        print(str(
+            create_extreme_sudoku(sudoku, goal=17, eliminate_randomly=0, objective=lambda sudoku: -sudoku.metric)
+        ))
